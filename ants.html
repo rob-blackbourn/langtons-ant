@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+<style>
+canvas {
+	background-color: black;
+}
+</style>
+	</head>
+	
+	<body>
+
+		<div>
+			<button onclick="startSimulation()">Start</button>
+			<button onclick="stopSimulation()">Stop</button>
+		</div>
+
+		<canvas id="canvas" width="600" height="600" />
+
+
+<script>
+function initialise(canvas, backgroundColor, rows, columns, ants) {
+
+	// Create a 2D grid of size rows x columns
+	var grid = new Array(rows);
+	for (r = 0; r < rows; ++r) {
+		grid[r] = new Array(columns);
+		for (c = 0; c < columns; ++c) {
+			grid[r][c] = backgroundColor;
+		}
+	}
+	
+	return {
+		canvas: canvas,
+		backgroundColor: backgroundColor,
+		grid: grid,
+		columns: columns,
+		rows: rows,
+		ants: ants
+	};
+}
+
+function turn(orientation, direction) {
+	if (direction == 'left') {
+		switch (orientation) {
+			case 'north':
+				return 'west';
+			case 'south':
+				return 'east';
+			case 'east':
+				return 'north';
+			case 'west':
+				return 'south';
+		}
+	} else {
+		switch (orientation) {
+			case 'north':
+				return 'east';
+			case 'south':
+				return 'west';
+			case 'east':
+				return 'south';
+			case 'west':
+				return 'north';
+		}
+	}
+}
+
+function move(ant, grid, columns, rows, backgroundColor) {
+
+	switch (ant.orientation) {
+		case 'north':
+			ant.column = ant.column - 1;
+			if (ant.column < 0) {
+				ant.column = columns - 1;
+			}
+			break;
+		case 'south':
+			ant.column = ant.column + 1;
+			if (ant.column >= columns) {
+				ant.column = 0;
+			}
+			break;
+		case 'east':
+			ant.row = ant.row + 1;
+			if (ant.row >= rows) {
+				ant.row = 0;
+			}
+			break;
+		case 'west':
+			ant.row = ant.row - 1;
+			if (ant.row < 0) {
+				ant.row = rows - 1;
+			}
+			break;
+	}
+
+	if (grid[ant.row][ant.column] == backgroundColor) {
+		grid[ant.row][ant.column] = ant.color;
+		ant.orientation = turn(ant.orientation, 'right');
+	} else {
+		grid[ant.row][ant.column] = backgroundColor;
+		ant.orientation = turn(ant.orientation, 'left');
+	}
+}
+
+function update(row, column, color, rows, columns, canvas) {
+	var rectWidth = canvas.width / columns;
+	var rectHeight = canvas.height / rows;
+	var x = column * rectWidth;
+	var y = row * rectHeight;
+	var ctx = canvas.getContext('2d');
+	ctx.fillStyle = color;
+	ctx.fillRect(x, y, rectWidth, rectHeight);
+}
+
+ function step(context) {
+	for (i = 0; i < context.ants.length; ++i) {
+		var ant = context.ants[i];
+		move(ant, context.grid, context.columns, context.rows, context.backgroundColor);
+		update(ant.row, ant.column, context.grid[ant.row][ant.column], context.rows, context.columns, context.canvas);
+	}
+}
+
+var intervalHandle;
+
+function startSimulation() {
+	var canvas = document.getElementById('canvas');
+	var ants = [
+		{row: 50,  column: 50, orientation: 'west', color: 'red' },
+		{row: 50, column: 150, orientation: 'south', color: 'green' },
+		{row: 150, column: 50, orientation: 'north', color: 'blue' },
+		{row: 150, column: 150, orientation: 'east', color: 'purple' },
+	];
+	var context = initialise(canvas, "black", 200, 200, ants);
+	intervalHandle = setInterval(function(){ step(context) }, 1);
+}
+
+function stopSimulation() {
+    clearInterval(intervalHandle);
+}
+</script>
+
+	</body>
+</html>
